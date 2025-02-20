@@ -25,3 +25,19 @@ Contruction de l'image docker
 ```
 sudo docker build . --file Dockerfile -t linkytic-exporter
 ```
+
+## Docker compose
+
+```yaml
+services:
+  linkytic_exporter:
+    image: dmachard/linkytic-exporter:v0.2.0
+    ports:
+      - "9100:9100/tcp"
+    devices:
+      - "/dev/ttyACM0:/dev/ttyACM0"
+    environment:
+      - LINKY_DEVICE=/dev/ttyACM0
+      - LINKY_MODE=HISTORICAL
+    restart: unless-stopped
+```

@@ -2,25 +2,24 @@
 FROM golang:1.24 as builder
 
 # Set the working directory inside the container
-WORKDIR /app
-
-# Copy the source code
+WORKDIR /build
 COPY . .
 
 # Build the binary
-RUN go build -o linkytic-exporter main.go
+RUN CGO_ENABLED=0 go build -o linkytic-exporter main.go
+
+
 
 # Use a minimal base image
-FROM alpine:3.16
-
-# Set the working directory
-WORKDIR /root/
+FROM alpine:3.21.3
 
 # Copy the binary from the builder
-COPY --from=builder /app/linkytic-exporter .
+WORKDIR /app
+COPY --from=builder /build/linkytic-exporter /app/linkytic-exporter
+RUN chmod +x /app/linkytic-exporter
 
 # Expose the metrics port
-EXPOSE 9100
+EXPOSE 9100/tcp
 
 # Run the exporter
-CMD ["./linkytic-exporter"]
+ENTRYPOINT ["/app/linkytic-exporter"]
