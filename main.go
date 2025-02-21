@@ -36,7 +36,7 @@ var (
 		Name: "linky_tic_standard_sinsts",
 		Help: "Puissance app. Instantanée soutirée en VA",
 	})
-	eastMetric = prometheus.NewGauge(prometheus.GaugeOpts{
+	eastMetric = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "linky_tic_standard_east",
 		Help: "Energie active soutirée totale en Wh",
 	})
@@ -47,6 +47,7 @@ func init() {
 	prometheus.MustRegister(pappMetric)
 	prometheus.MustRegister(iinstMetric)
 	prometheus.MustRegister(baseMetric)
+	// Register the Prometheus metrics
 	prometheus.MustRegister(vticMetric)
 	prometheus.MustRegister(sinstsMetric)
 	prometheus.MustRegister(eastMetric)
@@ -57,6 +58,15 @@ func getEnvOrDefault(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+var previousEast = 0.0
+
+func updateEastMetric(newValue float64) {
+	if newValue > previousEast {
+		eastMetric.Add(newValue - previousEast)
+	}
+	previousEast = newValue
 }
 
 func main() {
@@ -112,10 +122,10 @@ func main() {
 					vticMetric.Set(value)
 				}
 				if info.Label == "EAST" && info.Valid {
-					// Convert the value to float
 					var value float64
 					fmt.Sscanf(info.Data, "%f", &value)
-					eastMetric.Set(value)
+
+					updateEastMetric(value)
 				}
 				if info.Label == "SINSTS" && info.Valid {
 					// Convert the value to float
