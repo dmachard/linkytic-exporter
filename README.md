@@ -6,9 +6,9 @@ Prometheus Linky TIC exporter
 
 Disponible via /metrics sur le port 9100 
 
-- linky_tic_base (gauge) - Index option Base en Wh
-- linky_tic_iinst (gauge) - Intensité Instantanée en A
-- linky_tic_papp (gauge) - Puissance apparente en VA
+- linky_tic_historique_base (gauge) - Index option Base en Wh
+- linky_tic_historique_iinst (gauge) - Intensité Instantanée en A
+- linky_tic_historique_papp (gauge) - Puissance apparente en VA
 
 ## Docker run
 

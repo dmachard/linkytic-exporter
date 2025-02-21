@@ -3,7 +3,7 @@ module github.com/dmachard/linkytic-exporter
 go 1.22.2
 
 require (
-	github.com/dmachard/go-ticreader v0.3.0
+	github.com/dmachard/go-ticreader v0.4.0
 	github.com/prometheus/client_golang v1.21.0
 )
 

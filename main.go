@@ -13,18 +13,32 @@ import (
 )
 
 var (
-	// Define a Prometheus metrics
+	// Define Prometheus metrics for historical mode
 	pappMetric = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "linky_tic_papp",
+		Name: "linky_tic_historique_papp",
 		Help: "Puissance apparente en VA",
 	})
 	iinstMetric = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "linky_tic_iinst",
+		Name: "linky_tic_historique_iinst",
 		Help: "Intensité Instantanée en A",
 	})
 	baseMetric = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "linky_tic_base",
+		Name: "linky_tic_historique_base",
 		Help: "Index option Base en Wh",
+	})
+
+	// Define Prometheus metrics for standard mode
+	vticMetric = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "linky_tic_standard_vtic",
+		Help: "Version de la TIC",
+	})
+	sinstsMetric = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "linky_tic_standard_sinsts",
+		Help: "Puissance app. Instantanée soutirée en VA",
+	})
+	eastMetric = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "linky_tic_standard_east",
+		Help: "Energie active soutirée totale en Wh",
 	})
 )
 
@@ -45,7 +59,7 @@ func getEnvOrDefault(key, defaultValue string) string {
 func main() {
 	// Read environment variables
 	port := getEnvOrDefault("LINKY_TIC_DEVICE", "/dev/ttyACM0")
-	modeStr := getEnvOrDefault("LINKY_TIC_MODE", "HISTORICAL")
+	modeStr := getEnvOrDefault("LINKY_TIC_MODE", "STANDARD")
 
 	// Convert LINKY_MODE to ticreader mode
 	var mode ticreader.LinkyMode
@@ -87,6 +101,26 @@ func main() {
 					fmt.Sscanf(info.Data, "%f", &value)
 					baseMetric.Set(value)
 				}
+
+				if info.Label == "VTIC" && info.Valid {
+					// Convert the value to float
+					var value float64
+					fmt.Sscanf(info.Data, "%f", &value)
+					vticMetric.Set(value)
+				}
+				if info.Label == "EAST" && info.Valid {
+					// Convert the value to float
+					var value float64
+					fmt.Sscanf(info.Data, "%f", &value)
+					eastMetric.Set(value)
+				}
+				if info.Label == "SINSTS" && info.Valid {
+					// Convert the value to float
+					var value float64
+					fmt.Sscanf(info.Data, "%f", &value)
+					sinstsMetric.Set(value)
+				}
+
 			}
 		}
 	}()
