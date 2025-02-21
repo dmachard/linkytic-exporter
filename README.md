@@ -37,7 +37,7 @@ services:
     devices:
       - "/dev/ttyACM0:/dev/ttyACM0"
     environment:
-      - LINKY_DEVICE=/dev/ttyACM0
-      - LINKY_MODE=HISTORICAL
+      - LINKY_TIC_DEVICE=/dev/ttyACM0
+      - LINKY_TIC_MODE=HISTORICAL
     restart: unless-stopped
 ```

@@ -47,6 +47,9 @@ func init() {
 	prometheus.MustRegister(pappMetric)
 	prometheus.MustRegister(iinstMetric)
 	prometheus.MustRegister(baseMetric)
+	prometheus.MustRegister(vticMetric)
+	prometheus.MustRegister(sinstsMetric)
+	prometheus.MustRegister(eastMetric)
 }
 
 func getEnvOrDefault(key, defaultValue string) string {
