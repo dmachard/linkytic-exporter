@@ -159,11 +159,11 @@ func main() {
 					case "SINSTS":
 						sinstsMetric.Set(value)
 					case "PREF":
-						sinstsMetric.Set(value)
+						prefMetric.Set(value)
 					case "URMS1":
-						sinstsMetric.Set(value)
+						irms1Metric.Set(value)
 					case "IRMS1":
-						sinstsMetric.Set(value)
+						urms1Metric.Set(value)
 					}
 				}
 			}
