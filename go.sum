@@ -17,6 +17,8 @@ github.com/dmachard/go-ticreader v0.3.0 h1:UsgKM1E7t2EGwM/Lx+e53qgl8jgxQsx6jQfl9
 github.com/dmachard/go-ticreader v0.3.0/go.mod h1:AC+7XjVwz2SrX8sSlkZaBdqWJPb7EK1T/A7FCW6VjSE=
 github.com/dmachard/go-ticreader v0.4.0 h1:Vgz4THjBBAhrUFMWJ7nxRsrqLO6YAhf9tlEB4syiT5E=
 github.com/dmachard/go-ticreader v0.4.0/go.mod h1:AC+7XjVwz2SrX8sSlkZaBdqWJPb7EK1T/A7FCW6VjSE=
+github.com/dmachard/go-ticreader v1.0.0 h1:39X9uhR6SQX5l+X6EB6o3hpWaoIMqd0gjlYpkkld2kU=
+github.com/dmachard/go-ticreader v1.0.0/go.mod h1:AC+7XjVwz2SrX8sSlkZaBdqWJPb7EK1T/A7FCW6VjSE=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
 github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/klauspost/compress v1.17.11 h1:In6xLpyWOi1+C7tXUUWv2ot1QvBjxevKAaI6IXrJmUc=
