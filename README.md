@@ -30,6 +30,7 @@ sudo docker run -d --env-file ./env.list -p 9100:9100 --name=linky_exporter link
 
 | Variables | Description |
 | ------------- | ------------- |
+| LINKY_DEBUG | true ou false |
 | LINKY_TIC_DEVICE | addresse du port à utiliser, par défaut /dev/ttyACM0 |
 | LINKY_TIC_MODE | mode d'exécution HISTORICAL ou STANDARD |
 
