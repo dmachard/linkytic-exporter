@@ -60,6 +60,15 @@ func getEnvOrDefault(key, defaultValue string) string {
 	return defaultValue
 }
 
+func isNumeric(s string) bool {
+	for _, c := range s {
+		if (c < '0' || c > '9') && c != '.' {
+			return false
+		}
+	}
+	return true
+}
+
 func main() {
 	// Read environment variables
 	port := getEnvOrDefault("LINKY_TIC_DEVICE", "/dev/ttyACM0")
@@ -102,25 +111,32 @@ func main() {
 					log.Printf("DEBUG: Dataset - Label: %s, Value: %s, Valid: %t", info.Label, info.Data, info.Valid)
 				}
 
-				var value float64
-				if _, err := fmt.Sscanf(info.Data, "%f", &value); err != nil {
-					log.Printf("ERROR: Failed to parse value for %s: %v", info.Label, err)
+				if !info.Valid {
+					log.Printf("ERROR: Skipping invalid TIC data - Label: %s - Checksum invalid", info.Label)
 					continue
 				}
 
-				switch info.Label {
-				case "PAPP":
-					pappMetric.Set(value)
-				case "IINST":
-					iinstMetric.Set(value)
-				case "BASE":
-					baseMetric.Set(value)
-				case "VTIC":
-					vticMetric.Set(value)
-				case "EAST":
-					eastMetric.Set(value)
-				case "SINSTS":
-					sinstsMetric.Set(value)
+				if isNumeric(info.Data) {
+					var value float64
+					if _, err := fmt.Sscanf(info.Data, "%f", &value); err != nil {
+						log.Printf("ERROR: Failed to parse value for %s: %v", info.Label, err)
+						continue
+					}
+
+					switch info.Label {
+					case "PAPP":
+						pappMetric.Set(value)
+					case "IINST":
+						iinstMetric.Set(value)
+					case "BASE":
+						baseMetric.Set(value)
+					case "VTIC":
+						vticMetric.Set(value)
+					case "EAST":
+						eastMetric.Set(value)
+					case "SINSTS":
+						sinstsMetric.Set(value)
+					}
 				}
 			}
 		}
