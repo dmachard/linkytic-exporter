@@ -161,9 +161,9 @@ func main() {
 					case "PREF":
 						prefMetric.Set(value)
 					case "URMS1":
-						irms1Metric.Set(value)
-					case "IRMS1":
 						urms1Metric.Set(value)
+					case "IRMS1":
+						irms1Metric.Set(value)
 					}
 				}
 			}
