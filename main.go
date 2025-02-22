@@ -36,7 +36,7 @@ var (
 		Name: "linky_tic_standard_sinsts",
 		Help: "Puissance app. Instantanée soutirée en VA",
 	})
-	eastMetric = prometheus.NewCounter(prometheus.CounterOpts{
+	eastMetric = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "linky_tic_standard_east",
 		Help: "Energie active soutirée totale en Wh",
 	})
@@ -60,19 +60,14 @@ func getEnvOrDefault(key, defaultValue string) string {
 	return defaultValue
 }
 
-var previousEast = 0.0
-
-func updateEastMetric(newValue float64) {
-	if newValue > previousEast {
-		eastMetric.Add(newValue - previousEast)
-	}
-	previousEast = newValue
-}
-
 func main() {
 	// Read environment variables
 	port := getEnvOrDefault("LINKY_TIC_DEVICE", "/dev/ttyACM0")
 	modeStr := getEnvOrDefault("LINKY_TIC_MODE", "STANDARD")
+	debugMode := getEnvOrDefault("LINKY_DEBUG", "false")
+
+	// debug mode
+	debug := strings.ToLower(debugMode) == "true"
 
 	// Convert LINKY_MODE to ticreader mode
 	var mode ticreader.LinkyMode
@@ -85,6 +80,10 @@ func main() {
 		log.Fatalf("Invalid LINKY_MODE: %s (expected 'HISTORICAL' or 'STANDARD')", modeStr)
 	}
 
+	if debug {
+		log.Println("DEBUG MODE: ACTIVATED")
+	}
+
 	// Start reading TIC data
 	log.Printf("Starting TIC reader on %s with mode %s", port, modeStr)
 	frameChan, err := ticreader.StartReading(port, mode)
@@ -95,45 +94,34 @@ func main() {
 	// Goroutine to continuously update metrics
 	go func() {
 		for teleinfo := range frameChan {
+			if debug {
+				log.Printf("DEBUG: Received TIC Frame: %s Len Dataset: %d", teleinfo.Timestamp, len(teleinfo.Dataset))
+			}
 			for _, info := range teleinfo.Dataset {
-				if info.Label == "PAPP" && info.Valid {
-					// Convert the value to float
-					var value float64
-					fmt.Sscanf(info.Data, "%f", &value)
+				if debug {
+					log.Printf("DEBUG: Dataset - Label: %s, Value: %s, Valid: %t", info.Label, info.Data, info.Valid)
+				}
+
+				var value float64
+				if _, err := fmt.Sscanf(info.Data, "%f", &value); err != nil {
+					log.Printf("ERROR: Failed to parse value for %s: %v", info.Label, err)
+					continue
+				}
+
+				switch info.Label {
+				case "PAPP":
 					pappMetric.Set(value)
-				}
-				if info.Label == "IINST" && info.Valid {
-					// Convert the value to float
-					var value float64
-					fmt.Sscanf(info.Data, "%f", &value)
+				case "IINST":
 					iinstMetric.Set(value)
-				}
-				if info.Label == "BASE" && info.Valid {
-					// Convert the value to float
-					var value float64
-					fmt.Sscanf(info.Data, "%f", &value)
+				case "BASE":
 					baseMetric.Set(value)
-				}
-
-				if info.Label == "VTIC" && info.Valid {
-					// Convert the value to float
-					var value float64
-					fmt.Sscanf(info.Data, "%f", &value)
+				case "VTIC":
 					vticMetric.Set(value)
-				}
-				if info.Label == "EAST" && info.Valid {
-					var value float64
-					fmt.Sscanf(info.Data, "%f", &value)
-
-					updateEastMetric(value)
-				}
-				if info.Label == "SINSTS" && info.Valid {
-					// Convert the value to float
-					var value float64
-					fmt.Sscanf(info.Data, "%f", &value)
+				case "EAST":
+					eastMetric.Set(value)
+				case "SINSTS":
 					sinstsMetric.Set(value)
 				}
-
 			}
 		}
 	}()
