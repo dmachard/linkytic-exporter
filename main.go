@@ -61,6 +61,9 @@ func getEnvOrDefault(key, defaultValue string) string {
 }
 
 func isNumeric(s string) bool {
+	if len(s) == 0 {
+		return false
+	}
 	for _, c := range s {
 		if (c < '0' || c > '9') && c != '.' {
 			return false
@@ -104,6 +107,7 @@ func main() {
 	go func() {
 		for teleinfo := range frameChan {
 			if debug {
+				log.Printf("")
 				log.Printf("DEBUG: Received TIC Frame: %s Len Dataset: %d", teleinfo.Timestamp, len(teleinfo.Dataset))
 			}
 			for _, info := range teleinfo.Dataset {
