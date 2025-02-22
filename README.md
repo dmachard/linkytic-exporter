@@ -11,6 +11,9 @@ Mode standard:
 - linky_tic_standard_vtic - Version de la TIC
 - linky_tic_standard_sinsts - Puissance app. Instantanée soutirée en VA
 - linky_tic_standard_east - Energie active soutirée totale en Wh
+- linky_tic_standard_pref - Puissance app. de référence en kVA
+- linky_tic_standard_irms1 - Courant efficace, phase 1 en A
+- linky_tic_standard_urms1 - Tension efficace, phase 1 en A
 
 Mode historique:
 

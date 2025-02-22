@@ -40,6 +40,21 @@ var (
 		Name: "linky_tic_standard_east",
 		Help: "Energie active soutirée totale en Wh",
 	})
+
+	irms1Metric = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "linky_tic_standard_irms1",
+		Help: "Courant efficace, phase 1 en A",
+	})
+
+	urms1Metric = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "linky_tic_standard_urms1",
+		Help: "Tension efficace, phase 1 en V",
+	})
+
+	prefMetric = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "linky_tic_standard_pref",
+		Help: "Puissance app. de référence en kVA",
+	})
 )
 
 func init() {
@@ -51,6 +66,9 @@ func init() {
 	prometheus.MustRegister(vticMetric)
 	prometheus.MustRegister(sinstsMetric)
 	prometheus.MustRegister(eastMetric)
+	prometheus.MustRegister(irms1Metric)
+	prometheus.MustRegister(urms1Metric)
+	prometheus.MustRegister(prefMetric)
 }
 
 func getEnvOrDefault(key, defaultValue string) string {
@@ -139,6 +157,12 @@ func main() {
 					case "EAST":
 						eastMetric.Set(value)
 					case "SINSTS":
+						sinstsMetric.Set(value)
+					case "PREF":
+						sinstsMetric.Set(value)
+					case "URMS1":
+						sinstsMetric.Set(value)
+					case "IRMS1":
 						sinstsMetric.Set(value)
 					}
 				}
