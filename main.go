@@ -112,7 +112,7 @@ func main() {
 			}
 			for _, info := range teleinfo.Dataset {
 				if debug {
-					log.Printf("DEBUG: Dataset - Label: %s, Value: %s, Valid: %t", info.Label, info.Data, info.Valid)
+					log.Printf("DEBUG: Dataset - Label: %s, Horodate: %s, Value: %s, Valid: %t", info.Label, info.Horodate, info.Data, info.Valid)
 				}
 
 				if !info.Valid {
