@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/dmachard/go-ticreader"
 	"github.com/prometheus/client_golang/prometheus"
@@ -114,59 +115,67 @@ func main() {
 		log.Println("DEBUG MODE: ACTIVATED")
 	}
 
-	// Start reading TIC data
-	log.Printf("Starting TIC reader on %s with mode %s", port, modeStr)
-	frameChan, err := ticreader.StartReading(port, mode)
-	if err != nil {
-		log.Fatalf("Error initializing TIC reader: %v", err)
-	}
-
 	// Goroutine to continuously update metrics
 	go func() {
-		for teleinfo := range frameChan {
-			if debug {
-				log.Printf("")
-				log.Printf("DEBUG: Received TIC Frame: %s Len Dataset: %d", teleinfo.Timestamp, len(teleinfo.Dataset))
+		for {
+			// Start reading TIC data
+			log.Printf("Starting TIC reader on %s with mode %s", port, modeStr)
+			frameChan, err := ticreader.StartReading(port, mode)
+			if err != nil {
+				log.Printf("Error initializing TIC reader: %v", err)
+				log.Println("Retrying in 5 seconds...")
+				time.Sleep(5 * time.Second) // Attendre avant de réessayer
+				continue
 			}
-			for _, info := range teleinfo.Dataset {
+
+			for teleinfo := range frameChan {
 				if debug {
-					log.Printf("DEBUG: Dataset - Label: %s, Horodate: %s, Value: %s, Valid: %t", info.Label, info.Horodate, info.Data, info.Valid)
+					log.Printf("")
+					log.Printf("DEBUG: Received TIC Frame: %s Len Dataset: %d", teleinfo.Timestamp, len(teleinfo.Dataset))
 				}
+				for _, info := range teleinfo.Dataset {
+					if debug {
+						log.Printf("DEBUG: Dataset - Label: %s, Horodate: %s, Value: %s, Valid: %t", info.Label, info.Horodate, info.Data, info.Valid)
+					}
 
-				if !info.Valid {
-					log.Printf("ERROR: Skipping invalid TIC data - Label: %s - Checksum invalid", info.Label)
-					continue
-				}
-
-				if isNumeric(info.Data) {
-					var value float64
-					if _, err := fmt.Sscanf(info.Data, "%f", &value); err != nil {
-						log.Printf("ERROR: Failed to parse value for %s: %v", info.Label, err)
+					if !info.Valid {
+						log.Printf("ERROR: Skipping invalid TIC data - Label: %s - Checksum invalid", info.Label)
 						continue
 					}
 
-					switch info.Label {
-					case "PAPP":
-						pappMetric.Set(value)
-					case "IINST":
-						iinstMetric.Set(value)
-					case "BASE":
-						baseMetric.Set(value)
-					case "VTIC":
-						vticMetric.Set(value)
-					case "EAST":
-						eastMetric.Set(value)
-					case "SINSTS":
-						sinstsMetric.Set(value)
-					case "PREF":
-						prefMetric.Set(value)
-					case "URMS1":
-						urms1Metric.Set(value)
-					case "IRMS1":
-						irms1Metric.Set(value)
+					if isNumeric(info.Data) {
+						var value float64
+						if _, err := fmt.Sscanf(info.Data, "%f", &value); err != nil {
+							log.Printf("ERROR: Failed to parse value for %s: %v", info.Label, err)
+							continue
+						}
+
+						switch info.Label {
+						case "PAPP":
+							pappMetric.Set(value)
+						case "IINST":
+							iinstMetric.Set(value)
+						case "BASE":
+							baseMetric.Set(value)
+						case "VTIC":
+							vticMetric.Set(value)
+						case "EAST":
+							eastMetric.Set(value)
+						case "SINSTS":
+							sinstsMetric.Set(value)
+						case "PREF":
+							prefMetric.Set(value)
+						case "URMS1":
+							urms1Metric.Set(value)
+						case "IRMS1":
+							irms1Metric.Set(value)
+						}
 					}
 				}
 			}
+
+			log.Println("TIC reader stopped. Retrying connection in 5 seconds...")
+			time.Sleep(5 * time.Second)
 		}
 	}()
 
@@ -176,7 +185,7 @@ func main() {
 	// Start the HTTP server for Prometheus
 	portHTTP := "9100"
 	log.Printf("Exporter running at: http://localhost:%s/metrics", portHTTP)
-	err = http.ListenAndServe(":"+portHTTP, nil)
+	err := http.ListenAndServe(":"+portHTTP, nil)
 	if err != nil {
 		log.Fatalf("HTTP server error: %v", err)
 	}
