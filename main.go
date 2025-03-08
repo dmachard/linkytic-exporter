@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,6 +13,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
+
+const stateFile = "/tmp/linky_state.json"
 
 var (
 	// Define Prometheus metrics for historical mode
@@ -37,10 +40,15 @@ var (
 		Name: "linky_tic_standard_sinsts",
 		Help: "Puissance app. Instantanée soutirée en VA",
 	})
+
 	eastMetric = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "linky_tic_standard_east",
 		Help: "Energie active soutirée totale en Wh",
 	})
+	eastDayMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "linky_tic_standard_east_day",
+		Help: "Energie active soutirée par jour en kWh",
+	}, []string{"date"})
 
 	irms1Metric = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "linky_tic_standard_irms1",
@@ -56,7 +64,15 @@ var (
 		Name: "linky_tic_standard_pref",
 		Help: "Puissance app. de référence en kVA",
 	})
+
+	lastEastDailyValue float64 = -1
+	lastResetDate      string  = time.Now().Format("2006-01-02")
 )
+
+type State struct {
+	LastEastDailyValue float64 `json:"lastEastDailyValue"`
+	LastResetDate      string  `json:"lastResetDate"`
+}
 
 func init() {
 	// Register the Prometheus metrics
@@ -67,6 +83,7 @@ func init() {
 	prometheus.MustRegister(vticMetric)
 	prometheus.MustRegister(sinstsMetric)
 	prometheus.MustRegister(eastMetric)
+	prometheus.MustRegister(eastDayMetric)
 	prometheus.MustRegister(irms1Metric)
 	prometheus.MustRegister(urms1Metric)
 	prometheus.MustRegister(prefMetric)
@@ -89,6 +106,72 @@ func isNumeric(s string) bool {
 		}
 	}
 	return true
+}
+
+func saveState() {
+	state := State{
+		LastEastDailyValue: lastEastDailyValue,
+		LastResetDate:      lastResetDate,
+	}
+
+	data, err := json.Marshal(state)
+	if err != nil {
+		log.Printf("ERROR: unable to save the state: %v", err)
+		return
+	}
+
+	if err := os.WriteFile(stateFile, data, 0644); err != nil {
+		log.Printf("ERROR: Unable to write file: %v", err)
+	}
+}
+
+func loadState() {
+	data, err := os.ReadFile(stateFile)
+	if err != nil {
+		log.Printf("No state, start from zero")
+		return
+	}
+
+	var state State
+	if err := json.Unmarshal(data, &state); err != nil {
+		log.Printf("ERROR: unable to load state: %v", err)
+		return
+	}
+
+	lastEastDailyValue = state.LastEastDailyValue
+	lastResetDate = state.LastResetDate
+	log.Printf("INFO: Loading state (lastEastDailyValue=%.2f, lastResetDate=%s)", lastEastDailyValue, lastResetDate)
+}
+
+func updateDailyMetric(currentValue float64) {
+	now := time.Now()
+	currentDate := now.Format("2006-01-02")
+
+	// first start
+	if lastEastDailyValue == -1 {
+		log.Printf("First start, init value: %.2f Wh", currentValue)
+		lastEastDailyValue = currentValue
+		lastResetDate = currentDate
+		eastDayMetric.WithLabelValues(currentDate).Set(0)
+		saveState()
+		return
+	}
+
+	// Reset on new day
+	if currentDate != lastResetDate {
+		log.Printf("Daily reset (New day: %s)", currentDate)
+		lastResetDate = currentDate
+		lastEastDailyValue = currentValue
+		eastDayMetric.WithLabelValues(currentDate).Set(0) // Reset
+		saveState()
+	}
+
+	// Daily sum (in kWh)
+	if currentValue >= lastEastDailyValue {
+		consumption := (currentValue - lastEastDailyValue)
+		eastDayMetric.WithLabelValues(currentDate).Set(consumption)
+		saveState()
+	}
 }
 
 func main() {
@@ -114,6 +197,9 @@ func main() {
 	if debug {
 		log.Println("DEBUG MODE: ACTIVATED")
 	}
+
+	// load previous value
+	loadState()
 
 	// Goroutine to continuously update metrics
 	go func() {
@@ -161,6 +247,7 @@ func main() {
 							vticMetric.Set(value)
 						case "EAST":
 							eastMetric.Set(value)
+							updateDailyMetric(value)
 						case "SINSTS":
 							sinstsMetric.Set(value)
 						case "PREF":
