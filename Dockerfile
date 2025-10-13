@@ -11,7 +11,7 @@ RUN CGO_ENABLED=0 go build -o linkytic-exporter main.go
 
 
 # Use a minimal base image
-FROM alpine:3.22.1
+FROM alpine:3.22.2
 
 # Copy the binary from the builder
 WORKDIR /app
