@@ -29,8 +29,8 @@ Mode historique:
 
 Execution de l'image docker
 
-```
-sudo docker run -d --env-file ./env.list -p 9100:9100 --name=linky_exporter linkytic-exporter:latest
+```bash
+sudo docker run -d --env-file ./env.list --device /dev/ttyACM0:/dev/ttyACM0 -p 9100:9100 --name=linky_exporter linkytic-exporter:latest
 ```
 
 ## Variables d'environnement
@@ -38,7 +38,7 @@ sudo docker run -d --env-file ./env.list -p 9100:9100 --name=linky_exporter link
 | Variables | Description |
 | ------------- | ------------- |
 | LINKY_DEBUG | true ou false |
-| LINKY_TIC_DEVICE | addresse du port à utiliser, par défaut /dev/ttyACM0 |
+| LINKY_TIC_DEVICE | addresse du port USB à utiliser, par défaut /dev/ttyACM0 |
 | LINKY_TIC_MODE | mode d'exécution HISTORICAL ou STANDARD |
 
 ## Docker build
@@ -54,7 +54,7 @@ sudo docker build . --file Dockerfile -t linkytic-exporter
 ```yaml
 services:
   linkytic_exporter:
-    image: dmachard/linkytic-exporter:v0.2.0
+    image: dmachard/linkytic-exporter:v1.2.0
     ports:
       - "9100:9100/tcp"
     devices:
