@@ -8,19 +8,27 @@ jobs:
   publish-dockerhub:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - name: Checkout
+      uses: actions/checkout@v4
 
-    - name: Build the Docker image
-      run: |
-        docker build . --file Dockerfile -t linkytic-exporter
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
 
-    - name: Tag image
-      run: |
-        docker tag linkytic-exporter dmachard/linkytic-exporter:${{ github.event.release.tag_name }}
-        docker tag linkytic-exporter dmachard/linkytic-exporter:latest
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-    - name: Upload to DockerHub
-      run: |
-        docker login -u ${{ secrets.DOCKERHUB_LOGIN }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
-        docker push dmachard/linkytic-exporter:latest
-        docker push dmachard/linkytic-exporter:${{ github.event.release.tag_name }}
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_LOGIN }}
+        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+    - name: Build and push
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        push: true
+        platforms: linux/amd64,linux/arm64
+        tags: |
+          dmachard/linkytic-exporter:latest
+          dmachard/linkytic-exporter:${{ github.event.release.tag_name }}
