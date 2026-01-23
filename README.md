@@ -1,8 +1,8 @@
 # Linky TIC exporter
 
-Prometheus Linky TIC exporter 
-Based on the library https://github.com/dmachard/go-ticreader
-Tested with https://github.com/hallard/uTeleinfo
+Prometheus Linky TIC exporter
+- Based on the library https://github.com/dmachard/go-ticreader
+- Tested with https://github.com/hallard/uTeleinfo
 
 ## Métriques exposées
 
