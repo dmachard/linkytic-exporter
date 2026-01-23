@@ -4,7 +4,7 @@ Prometheus Linky TIC exporter
 - Basé sur la librairie https://github.com/dmachard/go-ticreader
 - Testé avec https://github.com/hallard/uTeleinfo
 
-<img src="imgs/dashboard_grafana.png" title="demo" width="400">
+<img src="imgs/dashboard_grafana.png" title="demo" width="600">
 
 ## Métriques exposées
 
